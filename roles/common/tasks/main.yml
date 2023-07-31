@@ -1,0 +1,28 @@
+---
+- name: Common Setup
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Update packages
+      package:
+        name: "*"
+        state: latest
+
+    - name: Install essential utilities
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - vim
+        - git
+        - python3
+        - python3-pip
+        - curl
+        - wget
+
+    - name: Configure firewall
+      ufw:
+        rule: allow
+        port: 80
+      become: true

@@ -1,0 +1,9 @@
+---
+- name: Web Server Provisioning
+  hosts: web
+  become: true
+
+  roles:
+    - common
+    - web_server
+    - app_deployment
