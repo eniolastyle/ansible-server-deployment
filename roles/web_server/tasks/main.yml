@@ -18,13 +18,14 @@
     mode: '0644'
 
 - name: Enable Apache virtual host
-  apache2_vhost:
-    name: flask_app
-    state: present
+  file:
+    src: /etc/apache2/sites-available/flask_app.conf
+    dest: /etc/apache2/sites-enabled/flask_app.conf
+    state: link
 
 - name: Disable Apache default virtual host
-  apache2_vhost:
-    name: 000-default.conf
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
     state: absent
 
 - name: Restart Apache

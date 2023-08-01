@@ -1,9 +1,4 @@
 ---
-- name: Install virtualenv
-  apt:
-    name: python3-venv
-    state: present
-
 - name: Create Flask app directory
   file:
     path: /var/www/flask_app
@@ -15,16 +10,36 @@
   git:
     repo: https://github.com/eniolastyle/flask-todo.git
     dest: /var/www/flask_app
-    version: main
+    version: master  # Or specify the correct branch name here
     accept_hostkey: yes
-  become: yes
+  become: true
 
 - name: Create virtual environment
   command: python3 -m venv /var/www/flask_app/venv
   args:
     creates: /var/www/flask_app/venv
 
+- name: Activate the virtual environment and set environment variables
+  shell: |
+    . /var/www/flask_app/venv/bin/activate
+    export FLASK_APP=app.py
+    export FLASK_ENV=development
+  args:
+    executable: /bin/bash
+  become: true
+
 - name: Install Flask app dependencies
   pip:
     requirements: /var/www/flask_app/requirements.txt
     virtualenv: /var/www/flask_app/venv
+
+- name: Run the Flask app
+  shell: |
+    . /var/www/flask_app/venv/bin/activate
+    flask run
+  args:
+    executable: /bin/bash
+  become: true
+  environment:
+    LC_ALL: C.UTF-8
+    LANG: C.UTF-8
