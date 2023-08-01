@@ -1,32 +1,30 @@
 ---
-- name: Application Deployment
-  hosts: web
-  become: true
+- name: Install virtualenv
+  apt:
+    name: python3-venv
+    state: present
 
-  tasks:
-    - name: Clone the application code from Git
-      git:
-        repo: https://github.com/eniolastyle/flask-todo.git
-        dest: /var/www/flask_app
+- name: Create Flask app directory
+  file:
+    path: /var/www/flask_app
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
-    - name: Install Flask dependencies
-      pip:
-        requirements: /var/www/flask_app/requirements.txt
+- name: Clone Flask app repository
+  git:
+    repo: https://github.com/eniolastyle/flask-todo.git
+    dest: /var/www/flask_app
+    version: main
+    accept_hostkey: yes
+  become: yes
 
-    - name: Configure Apache virtual host
-      template:
-        src: templates/apache_vhost.j2
-        dest: /etc/apache2/sites-available/flask_app.conf
-        owner: root
-        group: root
-        mode: '0644'
+- name: Create virtual environment
+  command: python3 -m venv /var/www/flask_app/venv
+  args:
+    creates: /var/www/flask_app/venv
 
-    - name: Enable Apache virtual host
-      command: a2ensite flask_app
-      notify: Restart Apache
-
-  handlers:
-    - name: Restart Apache
-      service:
-        name: apache2
-        state: restarted
+- name: Install Flask app dependencies
+  pip:
+    requirements: /var/www/flask_app/requirements.txt
+    virtualenv: /var/www/flask_app/venv

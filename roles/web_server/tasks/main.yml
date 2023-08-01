@@ -1,21 +1,33 @@
 ---
-- name: Web Server Setup
-  hosts: web
-  become: true
+- name: Install Apache
+  apt:
+    name: apache2
+    state: present
 
-  tasks:
-    - name: Install Apache
-      package:
-        name: apache2
-        state: present
+- name: Enable Apache rewrite module
+  apache2_module:
+    name: rewrite
+    state: present
 
-    - name: Start Apache service
-      service:
-        name: apache2
-        state: started
-        enabled: true
+- name: Copy Apache virtual host configuration
+  template:
+    src: templates/flask_app.conf.j2
+    dest: /etc/apache2/sites-available/flask_app.conf
+    owner: root
+    group: root
+    mode: '0644'
 
-    - name: Create index.html file
-      copy:
-        content: "Hello, World!"
-        dest: /var/www/html/index.html
+- name: Enable Apache virtual host
+  apache2_vhost:
+    name: flask_app
+    state: present
+
+- name: Disable Apache default virtual host
+  apache2_vhost:
+    name: 000-default.conf
+    state: absent
+
+- name: Restart Apache
+  service:
+    name: apache2
+    state: restarted
